@@ -1,0 +1,16 @@
+[Unit]
+Description=Deep Cool CH560 case digital monitoring display daemon
+
+[Service]
+Type=forking
+PIDFile=/run/dp-ch560/daemon.pid
+ExecStart=/usr/bin/dp-ch560-daemon \
+	--conf_file /etc/dp-ch560/display-daemon.conf \
+	--log_file /var/log/dp-ch560/daemon.log \
+	--pid_file /run/dp-ch560/daemon.pid \
+	--daemon
+User=dp-ch560-dd
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target
