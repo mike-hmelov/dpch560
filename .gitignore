@@ -6,6 +6,13 @@ Testing
 Makefile
 cmake_install.cmake
 install_manifest.txt
+.cproject
+.project
+.settings/
 compile_commands.json
 CTestTestfile.cmake
 _deps
+
+.idea
+cmake-build-debug
+cmake-build-release
