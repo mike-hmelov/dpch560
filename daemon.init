@@ -22,10 +22,10 @@
 # Source function library.
 . /etc/rc.d/init.d/functions
 
-prog="daemon"
+prog="dp-ch560-daemon"
 app="/usr/bin/$prog"
 lock_file="/var/lock/subsys/$prog"
-log_file="/var/log/$prog.log"
+log_file="/var/log/dp-ch560/daemon.log
 conf_file="/etc/dp-ch560/display-daemon.conf"
 proguser=root
 

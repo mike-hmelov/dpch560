@@ -9,7 +9,7 @@ ExecStart=/usr/bin/dp-ch560-daemon \
 	--log_file /var/log/dp-ch560/daemon.log \
 	--pid_file /run/dp-ch560/daemon.pid \
 	--daemon
-User=dp-ch560-dd
+User=dpch560
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]

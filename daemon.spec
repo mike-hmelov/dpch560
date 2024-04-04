@@ -8,21 +8,20 @@ Version:        0.1
 Release:        1%{?dist}
 Summary:        Deep Cool CH560 case digital monitoring display daemon
 
-License:        GPL
-URL:            https://github.com/jirihnidek/daemon
+License:        GPL v2
+URL:            https://github.com/mike-hmelov/dpch560
 Source0:        %{name}-%{version}.tar.gz
 
-Requires(pre):  shadow-utils
+#Requires(pre):  shadow-utils
 
-BuildRequires:  gcc
+BuildRequires:  clang
 BuildRequires:  make
 BuildRequires:  cmake
 BuildRequires:  systemd
 BuildRequires:  systemd-rpm-macros
 
-
 %description
-This package contains example of simple UNIX daemon
+Deep Cool CH560 case digital monitoring display daemon
 
 
 %pre
@@ -71,38 +70,21 @@ rm -rf $RPM_BUILD_ROOT
 %files
 
 # Files and directories owned by root:root
-%attr(755,root,root) %{_bindir}/daemon
-%attr(755,root,root) %dir %{_sysconfdir}/daemon
-%attr(644,root,root) %{_unitdir}/simple-daemon.service
-%attr(644,root,root) %{_unitdir}/forking-daemon.service
+%attr(755,root,root) %{_bindir}/dp-ch560-daemon
+%attr(755,root,root) %dir %{_sysconfdir}/dp-ch560
+%attr(644,root,root) %{_unitdir}/dp-ch560-display-daemon.service
 
 # File owned by root, but group can read it
 %attr(640,root,%{groupname}) %{_sysconfdir}/dp-ch560/display-daemon.conf
 
 # Files and directories owned by daemoner:daemoner user
-%attr(755,%{username},%{groupname}) %{_var}/log/daemon
-%attr(755,%{username},%{groupname}) %{_rundir}/daemon
+%attr(755,%{username},%{groupname}) %{_var}/log/dp-ch560
+%attr(755,%{username},%{groupname}) %{_rundir}/dp-ch560
 
 
 
 # This is section, where you should describe all important changes
 # in RPM
 %changelog
-* Mon Jan 22 2024 Jiri Hnidek <jhnidek@redhat.com>
-- Add initial support for Packit
-- Updated version of daemon to 0.2
-
-* Tue Oct 24 2023 Jiri Hnidek <jhnidek@redhat.com>
-- Fix building of RPM on COPR
-
-* Wed Sep 29 2021 Jiri Hnidek <jhnidek@redhat.com>
-- Use non-root user for runnig daemon
-
-* Mon Sep 27 2021 Jiri Hnidek <jhnidek@redhat.com>
-- Use GitHub Actions for building RPM
-
-* Fri Aug 27 2021 Jiri Hnidek <jhnidek@redhat.com>
-- RPM package built with tito
-
-* Fri Aug 27 2021 Jiri Hnidek <jhnidek@redhat.com>
-- Added first version of daemon.spec
+* Thu Apr 4 2024 Mihail Hmelov <darkdemon@inbox.lv>
+- First version of display daemon
