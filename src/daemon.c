@@ -34,8 +34,15 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <hidapi/hidapi.h>
 #include "runtime_params.h"
 #include "config.h"
+
+#define CH560_VENDOR_ID 0x3633
+#define CH560_PRODUCT_ID 0x0005
+
+#define MAGIC_HEADER 16
+#define CELSIUS 19
 
 static volatile int running = 0;
 static struct config app_config = {.delay = 1};
@@ -149,7 +156,11 @@ void print_help(const char *name);
 
 int parse_command_line(int argc, char *argv[], int *should_exit);
 
-void clean_runtime(struct runtime_params *params);
+void cleanup(void);
+
+void temp_to_buf(u_int8_t *buf, int temp);
+
+void report_usage_and_temp(unsigned char cpu_usage, unsigned char gpu_usage, int cpu_temp, int gpu_temp);
 
 /* Main function */
 int main(int argc, char *argv[]) {
@@ -195,36 +206,71 @@ int main(int argc, char *argv[]) {
         fprintf(app_runtime_params.log_stream, "No config file given, using defaults\n");
     }
 
+    if (hid_init()) {
+        fprintf(app_runtime_params.log_stream, "FAILED: init hid api lib failed\n");
+        cleanup();
+        return EXIT_FAILURE;
+    }
+
+    app_runtime_params.hid_handle = hid_open(CH560_VENDOR_ID, CH560_PRODUCT_ID, NULL);
+
+    if (!app_runtime_params.hid_handle) {
+        fprintf(app_runtime_params.log_stream, "FAILED: open device failed\n");
+        cleanup();
+        return EXIT_FAILURE;
+    }
+
+    hid_set_nonblocking(app_runtime_params.hid_handle, 1);
+
+    u_int8_t buf[64] = {16, 170};
+    hid_write(app_runtime_params.hid_handle, buf, 64);
+
     /* This global variable can be changed in function handling signal */
     running = 1;
 
+    unsigned char cpu_usage = 0;
+    unsigned char gpu_usage = 0;
+    int cpu_temp = 0;
+    int gpu_temp = 0;
+
+
     /* Never ending loop of server */
     while (running == 1) {
-        fprintf(app_runtime_params.log_stream, "Debug:\n");
-        fflush(app_runtime_params.log_stream);
-
-        /* TODO: dome something useful here */
+        report_usage_and_temp(cpu_usage, gpu_usage, cpu_temp, gpu_temp);
 
         /* Real server should use select() or poll() for waiting at
          * asynchronous event. Note: sleep() is interrupted, when
          * signal is received. */
         sleep(app_config.delay);
     }
-
-    /* Close log file, when it is used. */
-    if (app_runtime_params.log_stream != stdout) {
-        fclose(app_runtime_params.log_stream);
-        app_runtime_params.log_stream = NULL;
-    }
-
-    /* Write system log and close it. */
-    syslog(LOG_INFO, "Stopped %s", app_runtime_params.app_name);
-    closelog();
-
-    clean_config(&app_config);
-    clean_runtime(&app_runtime_params);
+    cleanup();
 
     return EXIT_SUCCESS;
+}
+
+void report_usage_and_temp(unsigned char cpu_usage, unsigned char gpu_usage, int cpu_temp, int gpu_temp) {
+    u_int8_t buf[64] = {0};
+    buf[0] = MAGIC_HEADER;
+    buf[1] = CELSIUS;
+    buf[2] = cpu_usage;
+    temp_to_buf(buf + 3, cpu_temp);
+    buf[6] = CELSIUS;
+    buf[7] = gpu_usage;
+    temp_to_buf(buf + 8, gpu_temp);
+
+    int written = hid_write(app_runtime_params.hid_handle, buf, 64);
+    fprintf(app_runtime_params.log_stream, "written cpuU %d, gpuU: %d, cpuT:%d, gpuT:%d, written:%d\n", cpu_usage,
+            gpu_usage, cpu_temp, gpu_temp, written);
+    fflush(app_runtime_params.log_stream);
+}
+
+void temp_to_buf(u_int8_t *buf, int temp) {
+    int current = temp;
+    *(buf + 2) = current % 10;
+    current /= 10;
+    *(buf + 1) = current % 10;
+    current /= 10;
+    *(buf) = current % 10;
 }
 
 int parse_command_line(int argc, char *argv[], int *should_exit) {
@@ -274,18 +320,33 @@ int parse_command_line(int argc, char *argv[], int *should_exit) {
     return EXIT_SUCCESS;
 }
 
-void clean_runtime(struct runtime_params *params) {
+void cleanup(void) {
+    if (app_runtime_params.hid_handle != NULL)
+        hid_close(app_runtime_params.hid_handle);
+    hid_exit();
+
+    /* Close log file, when it is used. */
+    if (app_runtime_params.log_stream != stdout) {
+        fclose(app_runtime_params.log_stream);
+        app_runtime_params.log_stream = NULL;
+    }
+
+    /* Write system log and close it. */
+    syslog(LOG_INFO, "Stopped %s", app_runtime_params.app_name);
+    closelog();
+    clean_config(&app_config);
     /* Free allocated memory */
-    free(params->app_name);
-    if (params->conf_file_name != NULL) free(params->conf_file_name);
-    if (params->log_file_name != NULL) free(params->log_file_name);
-    if (params->pid_file_name != NULL) free(params->pid_file_name);
+    free(app_runtime_params.app_name);
+    if (app_runtime_params.conf_file_name != NULL)
+        free((&app_runtime_params)->conf_file_name);
+    if (app_runtime_params.log_file_name != NULL)
+        free((&app_runtime_params)->log_file_name);
+    if (app_runtime_params.pid_file_name != NULL)
+        free((&app_runtime_params)->pid_file_name);
 }
 
 
 // TODO define monitor usb ids
-// TODO include USB lib
-// TODO send some fixed stuff to usb display
 // TODO make full rebrand daemon
 // TODO make rpm
 // TODO make deb
@@ -300,3 +361,5 @@ void clean_runtime(struct runtime_params *params) {
 // TODO send real gpu temp to display
 // TODO make gpu configurable
 // TODO make grade configurable
+// TODO rotate logs
+// TODO make ids parametrized (support other devices??)

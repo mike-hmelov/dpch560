@@ -6,8 +6,8 @@ CXX=clang
 COBJS=src/daemon.o src/config.o src/usage.o
 CPPOBJS=
 OBJS=$(COBJS) $(CPPOBJS)
-CFLAGS=-Wall -c -ggdb
-LDFLAGS=
+CFLAGS=-Wall -c -ggdb `pkg-config hidapi-hidraw --cflags`
+LDFLAGS=`pkg-config hidapi-hidraw --libs`
 #`fox-config --cflags` `pkg-config libusb-1.0 --cflags`
 LIBS=
 #-ludev -lrt -lpthread `fox-config --libs` `pkg-config libusb-1.0 --libs`
