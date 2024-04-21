@@ -3,15 +3,17 @@ all: ch560-daemon
 TARGET=ch560-daemon
 CC=clang
 CXX=clang
-COBJS=src/daemon.o src/config.o src/usage.o
+COBJS=src/daemon.o src/config.o src/usage.o src/demonize.o
 CPPOBJS=
 OBJS=$(COBJS) $(CPPOBJS)
-CFLAGS=-Wall -c -ggdb `pkg-config hidapi-hidraw --cflags`
-LDFLAGS=`pkg-config hidapi-hidraw --libs`
-#`fox-config --cflags` `pkg-config libusb-1.0 --cflags`
-LIBS=
-#-ludev -lrt -lpthread `fox-config --libs` `pkg-config libusb-1.0 --libs`
 
+ifeq ($(RELEASE), 1)
+	CFLAGS=-O3 -Os -Wall -c `pkg-config hidapi-hidraw --cflags`
+else
+	CFLAGS=-O0 -DDEBUG -Wall -c -ggdb `pkg-config hidapi-hidraw --cflags`
+endif
+LDFLAGS=`pkg-config hidapi-hidraw --libs`
+LIBS=
 
 ch560-daemon: $(OBJS)
 	$(CXX) $^ $(LDFLAGS) $(LIBS) -o $(TARGET)
