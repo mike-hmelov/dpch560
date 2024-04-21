@@ -73,6 +73,9 @@ int test_conf_file(char *_conf_file_name)
         return EXIT_FAILURE;
 }
 
+/**
+ * \brief Cleanup and resources allocated for config properties
+ */
 void clean_config(struct config *config)
 {
 

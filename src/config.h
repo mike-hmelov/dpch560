@@ -1,8 +1,6 @@
 #ifndef CH560MONITOR_CONFIG_H
 #define CH560MONITOR_CONFIG_H
 
-#define MAX_STR 255
-
 struct config {
     int delay;
 };
