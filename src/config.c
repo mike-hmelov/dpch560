@@ -11,7 +11,7 @@
 int read_conf_file(int reload, struct runtime_params* runtime, struct config* target)
 {
     FILE *conf_file = NULL;
-    int ret;
+    int ret = 0;
 
     if (runtime->conf_file_name == NULL) return 0;
     conf_file = fopen(runtime->conf_file_name, "r");
@@ -22,19 +22,23 @@ int read_conf_file(int reload, struct runtime_params* runtime, struct config* ta
         return -1;
     }
 
-    ret = fscanf(conf_file, "%d", &target->delay);
+    target->delay = 1;
+    strcpy(target->cpu_sensor_name, "k10temp-pci-00c3");
+    strcpy(target->gpu_sensor_name, "amdgpu-pci-1200");
 
-    if (ret > 0) {
-        if (reload == 1) {
-            syslog(LOG_INFO, "Reloaded configuration file %s of %s",
-                   runtime->conf_file_name,
-                   runtime->app_name);
-        } else {
-            syslog(LOG_INFO, "Configuration of %s read from file %s",
-                   runtime->app_name,
-                   runtime->conf_file_name);
-        }
-    }
+//    ret = fscanf(conf_file, "%d", &target->delay);
+
+//    if (ret > 0) {
+//        if (reload == 1) {
+//            syslog(LOG_INFO, "Reloaded configuration file %s of %s",
+//                   runtime->conf_file_name,
+//                   runtime->app_name);
+//        } else {
+//            syslog(LOG_INFO, "Configuration of %s read from file %s",
+//                   runtime->app_name,
+//                   runtime->conf_file_name);
+//        }
+//    }
 
     fclose(conf_file);
 

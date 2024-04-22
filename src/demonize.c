@@ -4,18 +4,15 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <syslog.h>
 #include <signal.h>
-#include <getopt.h>
 #include <string.h>
-#include <errno.h>
 
 #include "runtime_params.h"
 
 /**
  * \brief This function will daemonize this app
  */
-void daemonize(struct runtime_params* params) {
+void daemonize(struct runtime_params *params) {
     pid_t pid;
     int fd;
 

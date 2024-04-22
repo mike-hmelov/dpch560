@@ -30,19 +30,15 @@
 #include <signal.h>
 #include <getopt.h>
 #include <string.h>
-#include <errno.h>
-#include <hidapi/hidapi.h>
 #include "runtime_params.h"
+#include "demonize.h"
 #include "config.h"
-
-#define CH560_VENDOR_ID 0x3633
-#define CH560_PRODUCT_ID 0x0005
-
-#define MAGIC_HEADER 16
-#define CELSIUS 19
+#include "util.h"
+#include "hid.h"
+#include "sensors.h"
 
 static volatile int running = 0;
-static struct config app_config = {.delay = 1};
+static struct config app_config = {.delay = 2, .cpu_sensor_name="k10temp-pci-00c3", .gpu_sensor_name="amdgpu-pci-1200"};
 static struct runtime_params app_runtime_params = {.pid_fd=-1};
 
 /**
@@ -72,15 +68,9 @@ void handle_signal(int sig) {
     }
 }
 
-void daemonize(struct runtime_params* params);
-
-void print_help(const char *name);
-
 int parse_command_line(int argc, char *argv[], int *should_exit);
 
 void cleanup(void);
-
-void temp_to_buf(u_int8_t *buf, int temp);
 
 void report_usage_and_temp(unsigned char cpu_usage, unsigned char gpu_usage, int cpu_temp, int gpu_temp);
 
@@ -108,17 +98,7 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, handle_signal);
     signal(SIGHUP, handle_signal);
 
-    /* Try to open log file to this daemon */
-    if (app_runtime_params.log_file_name != NULL) {
-        app_runtime_params.log_stream = fopen(app_runtime_params.log_file_name, "a+");
-        if (app_runtime_params.log_stream == NULL) {
-            syslog(LOG_ERR, "Can not open log file: %s, error: %s",
-                   app_runtime_params.log_file_name, strerror(errno));
-            app_runtime_params.log_stream = stdout;
-        }
-    } else {
-        app_runtime_params.log_stream = stdout;
-    }
+    setup_log_file(&app_runtime_params);
 
     /* Read configuration from config file */
     if (app_runtime_params.conf_file_name) {
@@ -128,37 +108,26 @@ int main(int argc, char *argv[]) {
         fprintf(app_runtime_params.log_stream, "No config file given, using defaults\n");
     }
 
-    if (hid_init()) {
-        fprintf(app_runtime_params.log_stream, "FAILED: init hid api lib failed\n");
+    result = init_hid_device(&app_runtime_params);
+    if (result) {
         cleanup();
-        return EXIT_FAILURE;
+        return result;
     }
 
-    app_runtime_params.hid_handle = hid_open(CH560_VENDOR_ID, CH560_PRODUCT_ID, NULL);
-
-    if (!app_runtime_params.hid_handle) {
-        fprintf(app_runtime_params.log_stream, "FAILED: open device failed\n");
+    result = init_sensors(&app_config, &app_runtime_params);
+    if (result) {
         cleanup();
-        return EXIT_FAILURE;
+        return result;
     }
-
-    hid_set_nonblocking(app_runtime_params.hid_handle, 1);
-
-    u_int8_t buf[2] = {16, 170};
-    hid_write(app_runtime_params.hid_handle, buf, 64);
-
     /* This global variable can be changed in function handling signal */
     running = 1;
 
     unsigned char cpu_usage = 0;
     unsigned char gpu_usage = 0;
-    int cpu_temp = 0;
-    int gpu_temp = 0;
-
 
     /* Never ending loop of server */
     while (running == 1) {
-        report_usage_and_temp(cpu_usage, gpu_usage, cpu_temp, gpu_temp);
+        report_usage_and_temp(cpu_usage, gpu_usage, cpu_temp(&app_runtime_params), gpu_temp(&app_runtime_params));
 
         /* Real server should use select() or poll() for waiting at
          * asynchronous event. Note: sleep() is interrupted, when
@@ -184,15 +153,6 @@ void report_usage_and_temp(unsigned char cpu_usage, unsigned char gpu_usage, int
     fprintf(app_runtime_params.log_stream, "written cpuU %d, gpuU: %d, cpuT:%d, gpuT:%d, written:%d\n", cpu_usage,
             gpu_usage, cpu_temp, gpu_temp, written);
     fflush(app_runtime_params.log_stream);
-}
-
-void temp_to_buf(u_int8_t *buf, int temp) {
-    int current = temp;
-    *(buf + 2) = current % 10;
-    current /= 10;
-    *(buf + 1) = current % 10;
-    current /= 10;
-    *(buf) = current % 10;
 }
 
 int parse_command_line(int argc, char *argv[], int *should_exit) {
@@ -256,15 +216,9 @@ void cleanup(void) {
     /* Write system log and close it. */
     syslog(LOG_INFO, "Stopped %s", app_runtime_params.app_name);
     closelog();
+    cleanup_sensors(&app_runtime_params);
     clean_config(&app_config);
-    /* Free allocated memory */
-    free(app_runtime_params.app_name);
-    if (app_runtime_params.conf_file_name != NULL)
-        free((&app_runtime_params)->conf_file_name);
-    if (app_runtime_params.log_file_name != NULL)
-        free((&app_runtime_params)->log_file_name);
-    if (app_runtime_params.pid_file_name != NULL)
-        free((&app_runtime_params)->pid_file_name);
+    clean_runtime(&app_runtime_params);
 }
 
 
@@ -275,8 +229,6 @@ void cleanup(void) {
 // TODO make static or lib dependent
 // TODO learn cpu usage
 // TODO send real cpu usage to display
-// TODO learn cpu temp
-// TODO send real cpu temp to display
 // TODO learn gpu usage
 // TODO send readl gpu usage to display
 // TODO lean gpu temp
@@ -285,3 +237,4 @@ void cleanup(void) {
 // TODO make grade configurable
 // TODO rotate logs
 // TODO make ids parametrized (support other devices??)
+// TODO find feature by name - rather then just [0]

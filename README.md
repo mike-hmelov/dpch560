@@ -13,7 +13,8 @@ operating systems. Probably also Mac and Windows compatibility will be added lat
 # Development
 
 ## Libraries
-* hidapi-hidraw
+* [hidapi-hidraw](https://github.com/libusb/hidapi)
+* [lm-sensors](https://github.com/lm-sensors/lm-sensors)
 
 # Contribute
 
@@ -26,3 +27,10 @@ Daemon based on skeleton provided by https://github.com/jirihnidek/daemon
 ## Build Requirements
 
 C compiler (originally clang is used, but should be compatible with GCC as well)
+
+## Build
+
+```make```
+
+To build release version 
+```make RELEASE=1```
