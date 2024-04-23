@@ -3,8 +3,8 @@ all: ch560-daemon
 TARGET=ch560-daemon
 CC=clang
 CXX=clang
-COBJS=src/daemon.o src/config.o src/usage.o src/demonize.o src/hid.o src/util.o src/sensors.o src/runtime_params.o
-CPPOBJS=
+COBJS=
+CPPOBJS=src/config.o src/daemon.o src/usage.o src/demonize.o src/hid.o src/util.o src/sensors.o src/runtime_params.o
 OBJS=$(COBJS) $(CPPOBJS)
 
 ifeq ($(RELEASE), 1)
@@ -13,7 +13,7 @@ else
 	CFLAGS=-O0 -DDEBUG -Wall -c -ggdb `pkg-config hidapi-hidraw --cflags`
 endif
 LDFLAGS=`pkg-config hidapi-hidraw --libs`
-LIBS=-lsensors
+LIBS=-lsensors -lstdc++
 
 ch560-daemon: $(OBJS)
 	$(CXX) $^ $(LDFLAGS) $(LIBS) -o $(TARGET)

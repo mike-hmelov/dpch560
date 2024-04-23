@@ -6,13 +6,13 @@
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
-
-#include "runtime_params.h"
+#include "runtime_params.hpp"
+#include "demonize.hpp"
 
 /**
  * \brief This function will daemonize this app
  */
-void daemonize(struct runtime_params *params) {
+void daemonize(runtime_params *params) {
     pid_t pid;
     int fd;
 

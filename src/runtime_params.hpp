@@ -1,5 +1,5 @@
-#ifndef CH560MONITOR_RUNTIME_PARAMS_H
-#define CH560MONITOR_RUNTIME_PARAMS_H
+#ifndef CH560MONITOR_RUNTIME_PARAMS_HPP
+#define CH560MONITOR_RUNTIME_PARAMS_HPP
 
 #include <stdio.h>
 #include <hidapi/hidapi.h>
@@ -27,6 +27,6 @@ struct runtime_params {
     const sensors_subfeature *gpu_sub;
 };
 
-void clean_runtime(struct runtime_params* params);
+void clean_runtime(runtime_params* params);
 
-#endif //CH560MONITOR_RUNTIME_PARAMS_H
+#endif //CH560MONITOR_RUNTIME_PARAMS_HPP

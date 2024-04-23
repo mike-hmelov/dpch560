@@ -1,6 +1,6 @@
-#include "runtime_params.h"
+#include "runtime_params.hpp"
 
-void clean_runtime(struct runtime_params *params) {
+void clean_runtime(runtime_params *params) {
     /* Free allocated memory */
     free(params->app_name);
     if (params->conf_file_name != NULL)

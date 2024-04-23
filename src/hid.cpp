@@ -1,6 +1,6 @@
 #include "hid.h"
 
-int init_hid_device(struct runtime_params* params) {
+int init_hid_device(runtime_params* params) {
     if (hid_init()) {
         fprintf(params->log_stream, "FAILED: init hid api lib failed\n");
         return EXIT_FAILURE;

@@ -1,18 +1,17 @@
-#ifndef CH560MONITOR_UTIL_H
-#define CH560MONITOR_UTIL_H
+#pragma once
 
 #include <stdlib.h>
 #include <syslog.h>
 #include <errno.h>
 #include <string.h>
 
-#include "runtime_params.h"
+#include "runtime_params.hpp"
 
 #define MAGIC_HEADER 16
 #define CELSIUS 19
 
 void print_help(const char *name);
-void temp_to_buf(u_int8_t *buf, int temp);
-void setup_log_file(struct runtime_params *params);
 
-#endif //CH560MONITOR_UTIL_H
+void temp_to_buf(u_int8_t *buf, int temp);
+
+void setup_log_file(runtime_params *params);

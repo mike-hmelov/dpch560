@@ -1,6 +1,6 @@
-#include "util.h"
+#include "util.hpp"
 
-void setup_log_file(struct runtime_params *params) {
+void setup_log_file(runtime_params *params) {
     /* Try to open log file to this daemon */
     if (params->log_file_name != NULL) {
         params->log_stream = fopen(params->log_file_name, "a+");

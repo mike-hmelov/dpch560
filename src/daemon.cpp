@@ -30,15 +30,16 @@
 #include <signal.h>
 #include <getopt.h>
 #include <string.h>
-#include "runtime_params.h"
-#include "demonize.h"
-#include "config.h"
-#include "util.h"
+#include "runtime_params.hpp"
+#include "demonize.hpp"
+#include "config.hpp"
+#include "util.hpp"
 #include "hid.h"
-#include "sensors.h"
+#include "sensors.hpp"
 
 static volatile int running = 0;
-static struct config app_config = {.delay = 2, .cpu_sensor_name="k10temp-pci-00c3", .gpu_sensor_name="amdgpu-pci-1200"};
+Configuration appConfig;
+
 static struct runtime_params app_runtime_params = {.pid_fd=-1};
 
 /**
@@ -62,7 +63,7 @@ void handle_signal(int sig) {
         signal(SIGINT, SIG_DFL);
     } else if (sig == SIGHUP) {
         fprintf(app_runtime_params.log_stream, "Debug: reloading daemon config file ...\n");
-        read_conf_file(1, &app_runtime_params, &app_config);
+        appConfig.Read(1, app_runtime_params.conf_file_name);
     } else if (sig == SIGCHLD) {
         fprintf(app_runtime_params.log_stream, "Debug: received SIGCHLD signal\n");
     }
@@ -103,7 +104,7 @@ int main(int argc, char *argv[]) {
     /* Read configuration from config file */
     if (app_runtime_params.conf_file_name) {
         fprintf(app_runtime_params.log_stream, "Reading config file from: %s\n", app_runtime_params.conf_file_name);
-        read_conf_file(0, &app_runtime_params, &app_config);
+        appConfig.Read(0, app_runtime_params.conf_file_name);
     } else {
         fprintf(app_runtime_params.log_stream, "No config file given, using defaults\n");
     }
@@ -114,7 +115,7 @@ int main(int argc, char *argv[]) {
         return result;
     }
 
-    result = init_sensors(&app_config, &app_runtime_params);
+    result = init_sensors(appConfig, &app_runtime_params);
     if (result) {
         cleanup();
         return result;
@@ -132,7 +133,7 @@ int main(int argc, char *argv[]) {
         /* Real server should use select() or poll() for waiting at
          * asynchronous event. Note: sleep() is interrupted, when
          * signal is received. */
-        sleep(app_config.delay);
+        sleep(appConfig.fDelay);
     }
     cleanup();
 
@@ -178,9 +179,11 @@ int parse_command_line(int argc, char *argv[], int *should_exit) {
                 print_help(argv[0]);
                 *should_exit = 1;
                 return EXIT_FAILURE;
-            case 't':
+            case 't': {
                 *should_exit = 1;
-                return test_conf_file(optarg);
+                Configuration testConfig;
+                return testConfig.Test(optarg);
+            }
             case 'c':
                 app_runtime_params.conf_file_name = strdup(optarg);
                 break;
@@ -217,7 +220,6 @@ void cleanup(void) {
     syslog(LOG_INFO, "Stopped %s", app_runtime_params.app_name);
     closelog();
     cleanup_sensors(&app_runtime_params);
-    clean_config(&app_config);
     clean_runtime(&app_runtime_params);
 }
 
