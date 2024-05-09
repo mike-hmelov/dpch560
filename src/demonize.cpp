@@ -12,7 +12,7 @@
 /**
  * \brief This function will daemonize this app
  */
-void daemonize(runtime_params *params) {
+void daemonize(DaemonRuntime& params) {
     pid_t pid;
     int fd;
 
@@ -68,20 +68,20 @@ void daemonize(runtime_params *params) {
     stderr = fopen("/dev/null", "w+");
 
     /* Try to write PID of daemon to lockfile */
-    if (params->pid_file_name != NULL) {
+    if (params.pid_file_name != NULL) {
         char str[20];
-        params->pid_fd = open(params->pid_file_name, O_RDWR | O_CREAT, 0640);
-        if (params->pid_fd < 0) {
+        params.pid_fd = open(params.pid_file_name, O_RDWR | O_CREAT, 0640);
+        if (params.pid_fd < 0) {
             /* Can't open lockfile */
             exit(EXIT_FAILURE);
         }
-        if (lockf(params->pid_fd, F_TLOCK, 0) < 0) {
+        if (lockf(params.pid_fd, F_TLOCK, 0) < 0) {
             /* Can't lock file */
             exit(EXIT_FAILURE);
         }
         /* Get current PID */
         sprintf(str, "%d\n", getpid());
         /* Write PID to lockfile */
-        write(params->pid_fd, str, strlen(str));
+        write(params.pid_fd, str, strlen(str));
     }
 }

@@ -1,13 +1,17 @@
+#include <malloc.h>
 #include "runtime_params.hpp"
 
-void clean_runtime(runtime_params *params) {
-    /* Free allocated memory */
-    free(params->app_name);
-    if (params->conf_file_name != NULL)
-        free(params->conf_file_name);
-    if (params->log_file_name != NULL)
-        free(params->log_file_name);
-    if (params->pid_file_name != NULL)
-        free(params->pid_file_name);
+DaemonRuntime::DaemonRuntime() {
+    pid_fd = -1;
 }
 
+
+DaemonRuntime::~DaemonRuntime() {
+    free(app_name);
+    if (conf_file_name != nullptr)
+        free(conf_file_name);
+    if (log_file_name != nullptr)
+        free(log_file_name);
+    if (pid_file_name != nullptr)
+        free(pid_file_name);
+}

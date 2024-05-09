@@ -39,8 +39,8 @@
 
 static volatile int running = 0;
 Configuration appConfig;
+DaemonRuntime appRuntime;
 
-static struct runtime_params app_runtime_params = {.pid_fd=-1};
 
 /**
  * \brief Callback function for handling signals.
@@ -48,24 +48,24 @@ static struct runtime_params app_runtime_params = {.pid_fd=-1};
  */
 void handle_signal(int sig) {
     if (sig == SIGINT) {
-        fprintf(app_runtime_params.log_stream, "Debug: stopping daemon ...\n");
+        fprintf(appRuntime.log_stream, "Debug: stopping daemon ...\n");
         /* Unlock and close lockfile */
-        if (app_runtime_params.pid_fd != -1) {
-            lockf(app_runtime_params.pid_fd, F_ULOCK, 0);
-            close(app_runtime_params.pid_fd);
+        if (appRuntime.pid_fd != -1) {
+            lockf(appRuntime.pid_fd, F_ULOCK, 0);
+            close(appRuntime.pid_fd);
         }
         /* Try to delete lockfile */
-        if (app_runtime_params.pid_file_name != NULL) {
-            unlink(app_runtime_params.pid_file_name);
+        if (appRuntime.pid_file_name != NULL) {
+            unlink(appRuntime.pid_file_name);
         }
         running = 0;
         /* Reset signal handling to default behavior */
         signal(SIGINT, SIG_DFL);
     } else if (sig == SIGHUP) {
-        fprintf(app_runtime_params.log_stream, "Debug: reloading daemon config file ...\n");
-        appConfig.Read(1, app_runtime_params.conf_file_name);
+        fprintf(appRuntime.log_stream, "Debug: reloading daemon config file ...\n");
+        appConfig.Read(1, appRuntime.conf_file_name);
     } else if (sig == SIGCHLD) {
-        fprintf(app_runtime_params.log_stream, "Debug: received SIGCHLD signal\n");
+        fprintf(appRuntime.log_stream, "Debug: received SIGCHLD signal\n");
     }
 }
 
@@ -85,37 +85,37 @@ int main(int argc, char *argv[]) {
     }
 
     /* When daemonizing is requested at command line. */
-    if (app_runtime_params.start_daemonized) {
+    if (appRuntime.start_daemonized) {
         /* It is also possible to use glibc function deamon()
          * at this point, but it is useful to customize your daemon. */
-        daemonize(&app_runtime_params);
+        daemonize(appRuntime);
     }
 
     /* Open system log and write message to it */
-    openlog(app_runtime_params.app_name, LOG_PID | LOG_CONS, LOG_DAEMON);
-    syslog(LOG_INFO, "Started %s", app_runtime_params.app_name);
+    openlog(appRuntime.app_name, LOG_PID | LOG_CONS, LOG_DAEMON);
+    syslog(LOG_INFO, "Started %s", appRuntime.app_name);
 
     /* Daemon will handle two signals */
     signal(SIGINT, handle_signal);
     signal(SIGHUP, handle_signal);
 
-    setup_log_file(&app_runtime_params);
+    setup_log_file(appRuntime);
 
     /* Read configuration from config file */
-    if (app_runtime_params.conf_file_name) {
-        fprintf(app_runtime_params.log_stream, "Reading config file from: %s\n", app_runtime_params.conf_file_name);
-        appConfig.Read(0, app_runtime_params.conf_file_name);
+    if (appRuntime.conf_file_name) {
+        fprintf(appRuntime.log_stream, "Reading config file from: %s\n", appRuntime.conf_file_name);
+        appConfig.Read(0, appRuntime.conf_file_name);
     } else {
-        fprintf(app_runtime_params.log_stream, "No config file given, using defaults\n");
+        fprintf(appRuntime.log_stream, "No config file given, using defaults\n");
     }
 
-    result = init_hid_device(&app_runtime_params);
+    result = init_hid_device(appRuntime);
     if (result) {
         cleanup();
         return result;
     }
 
-    result = init_sensors(appConfig, &app_runtime_params);
+    result = init_sensors(appConfig, appRuntime);
     if (result) {
         cleanup();
         return result;
@@ -128,12 +128,12 @@ int main(int argc, char *argv[]) {
 
     /* Never ending loop of server */
     while (running == 1) {
-        report_usage_and_temp(cpu_usage, gpu_usage, cpu_temp(&app_runtime_params), gpu_temp(&app_runtime_params));
+        report_usage_and_temp(cpu_usage, gpu_usage, cpu_temp(appRuntime), gpu_temp(appRuntime));
 
         /* Real server should use select() or poll() for waiting at
          * asynchronous event. Note: sleep() is interrupted, when
          * signal is received. */
-        sleep(appConfig.fDelay);
+        sleep(appConfig.Delay());
     }
     cleanup();
 
@@ -150,10 +150,10 @@ void report_usage_and_temp(unsigned char cpu_usage, unsigned char gpu_usage, int
     buf[7] = gpu_usage;
     temp_to_buf(buf + 8, gpu_temp);
 
-    int written = hid_write(app_runtime_params.hid_handle, buf, 64);
-    fprintf(app_runtime_params.log_stream, "written cpuU %d, gpuU: %d, cpuT:%d, gpuT:%d, written:%d\n", cpu_usage,
+    int written = hid_write(appRuntime.hid_handle, buf, 64);
+    fprintf(appRuntime.log_stream, "written cpuU %d, gpuU: %d, cpuT:%d, gpuT:%d, written:%d\n", cpu_usage,
             gpu_usage, cpu_temp, gpu_temp, written);
-    fflush(app_runtime_params.log_stream);
+    fflush(appRuntime.log_stream);
 }
 
 int parse_command_line(int argc, char *argv[], int *should_exit) {
@@ -185,42 +185,41 @@ int parse_command_line(int argc, char *argv[], int *should_exit) {
                 return testConfig.Test(optarg);
             }
             case 'c':
-                app_runtime_params.conf_file_name = strdup(optarg);
+                appRuntime.conf_file_name = strdup(optarg);
                 break;
             case 'l':
-                app_runtime_params.log_file_name = strdup(optarg);
+                appRuntime.log_file_name = strdup(optarg);
                 break;
             case 'p':
-                app_runtime_params.pid_file_name = strdup(optarg);
+                appRuntime.pid_file_name = strdup(optarg);
                 break;
             case 'd':
-                app_runtime_params.start_daemonized = 1;
+                appRuntime.start_daemonized = 1;
                 break;
             default:
                 break;
         }
     }
-    app_runtime_params.app_name = strdup(argv[0]);
+    appRuntime.app_name = strdup(argv[0]);
     *should_exit = 0;
     return EXIT_SUCCESS;
 }
 
 void cleanup(void) {
-    if (app_runtime_params.hid_handle != NULL)
-        hid_close(app_runtime_params.hid_handle);
+    if (appRuntime.hid_handle != NULL)
+        hid_close(appRuntime.hid_handle);
     hid_exit();
 
     /* Close log file, when it is used. */
-    if (app_runtime_params.log_stream != stdout) {
-        fclose(app_runtime_params.log_stream);
-        app_runtime_params.log_stream = NULL;
+    if (appRuntime.log_stream != stdout) {
+        fclose(appRuntime.log_stream);
+        appRuntime.log_stream = NULL;
     }
 
     /* Write system log and close it. */
-    syslog(LOG_INFO, "Stopped %s", app_runtime_params.app_name);
+    syslog(LOG_INFO, "Stopped %s", appRuntime.app_name);
     closelog();
-    cleanup_sensors(&app_runtime_params);
-    clean_runtime(&app_runtime_params);
+    cleanup_sensors(appRuntime);
 }
 
 

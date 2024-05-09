@@ -11,10 +11,15 @@ public:
 
     int Test(const char *fileName);
 
+    [[nodiscard]] int Delay() const { return fDelay; }
 
-public:
+private:
     int fDelay;
+public:
     char fCpuSensorName[100];
     char fGpuSensorName[100];
+
+private:
+    void InitDefaults();
 };
 

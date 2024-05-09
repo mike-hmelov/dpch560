@@ -14,4 +14,4 @@ void print_help(const char *name);
 
 void temp_to_buf(u_int8_t *buf, int temp);
 
-void setup_log_file(runtime_params *params);
+void setup_log_file(DaemonRuntime& params);

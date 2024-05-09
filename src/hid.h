@@ -9,6 +9,6 @@
 #define CH560_VENDOR_ID 0x3633
 #define CH560_PRODUCT_ID 0x0005
 
-int init_hid_device(runtime_params* params);
+int init_hid_device(DaemonRuntime& params);
 
 

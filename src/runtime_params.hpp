@@ -1,12 +1,15 @@
-#ifndef CH560MONITOR_RUNTIME_PARAMS_HPP
-#define CH560MONITOR_RUNTIME_PARAMS_HPP
+#pragma once
 
-#include <stdio.h>
+#include <cstdio>
 #include <hidapi/hidapi.h>
 #include <sensors/sensors.h>
-#include <malloc.h>
 
-struct runtime_params {
+class DaemonRuntime {
+public:
+    DaemonRuntime();
+    ~DaemonRuntime();
+
+public:
     char *conf_file_name;
     char *log_file_name;
     char *pid_file_name;
@@ -14,6 +17,7 @@ struct runtime_params {
     char *app_name;
     FILE *log_stream;
     int start_daemonized;
+
     hid_device* hid_handle;
 
     sensors_chip_name cpu_root_chip;
@@ -27,6 +31,3 @@ struct runtime_params {
     const sensors_subfeature *gpu_sub;
 };
 
-void clean_runtime(runtime_params* params);
-
-#endif //CH560MONITOR_RUNTIME_PARAMS_HPP

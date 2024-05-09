@@ -1,3 +1,3 @@
 #pragma once
 
-void daemonize(runtime_params *params);
+void daemonize(DaemonRuntime& params);

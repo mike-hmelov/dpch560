@@ -8,9 +8,7 @@
 #include "config.hpp"
 
 Configuration::Configuration() {
-    fDelay = 2;
-    strncpy(fCpuSensorName, "k10temp-pci-00c3", sizeof(fCpuSensorName));
-    strncpy(fGpuSensorName, "amdgpu-pci-1200", sizeof(fGpuSensorName));
+    InitDefaults();
 }
 
 Configuration::~Configuration() {
@@ -76,4 +74,10 @@ int Configuration::Test(const char *fileName) {
     return EXIT_SUCCESS;
 //    else
 //        return EXIT_FAILURE;
+}
+
+void Configuration::InitDefaults() {
+    fDelay = 2;
+    strncpy(fCpuSensorName, "k10temp-pci-00c3", sizeof(fCpuSensorName));
+    strncpy(fGpuSensorName, "amdgpu-pci-0300", sizeof(fGpuSensorName));
 }
