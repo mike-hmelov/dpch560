@@ -18,8 +18,6 @@ public:
     FILE *log_stream;
     int start_daemonized;
 
-    hid_device* hid_handle;
-
     sensors_chip_name cpu_root_chip;
     const sensors_chip_name* cpu_chip;
     const sensors_feature *cpu_feature;

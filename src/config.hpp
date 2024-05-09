@@ -16,10 +16,7 @@ public:
 private:
     int fDelay;
 public:
-    char fCpuSensorName[100];
-    char fGpuSensorName[100];
-
-private:
-    void InitDefaults();
+    char fCpuSensorName[100]{};
+    char fGpuSensorName[100]{};
 };
 

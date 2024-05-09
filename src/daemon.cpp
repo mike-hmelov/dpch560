@@ -34,7 +34,7 @@
 #include "demonize.hpp"
 #include "config.hpp"
 #include "util.hpp"
-#include "hid.h"
+#include "hid.hpp"
 #include "sensors.hpp"
 
 static volatile int running = 0;
@@ -55,7 +55,7 @@ void handle_signal(int sig) {
             close(appRuntime.pid_fd);
         }
         /* Try to delete lockfile */
-        if (appRuntime.pid_file_name != NULL) {
+        if (appRuntime.pid_file_name != nullptr) {
             unlink(appRuntime.pid_file_name);
         }
         running = 0;
@@ -73,7 +73,7 @@ int parse_command_line(int argc, char *argv[], int *should_exit);
 
 void cleanup(void);
 
-void report_usage_and_temp(unsigned char cpu_usage, unsigned char gpu_usage, int cpu_temp, int gpu_temp);
+void report_usage_and_temp(HID& hid, unsigned char cpu_usage, unsigned char gpu_usage, int cpu_temp, int gpu_temp);
 
 /* Main function */
 int main(int argc, char *argv[]) {
@@ -109,8 +109,8 @@ int main(int argc, char *argv[]) {
         fprintf(appRuntime.log_stream, "No config file given, using defaults\n");
     }
 
-    result = init_hid_device(appRuntime);
-    if (result) {
+    HID hid(appRuntime.log_stream);
+    if(!hid.Valid()){
         cleanup();
         return result;
     }
@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
 
     /* Never ending loop of server */
     while (running == 1) {
-        report_usage_and_temp(cpu_usage, gpu_usage, cpu_temp(appRuntime), gpu_temp(appRuntime));
+        report_usage_and_temp(hid, cpu_usage, gpu_usage, cpu_temp(appRuntime), gpu_temp(appRuntime));
 
         /* Real server should use select() or poll() for waiting at
          * asynchronous event. Note: sleep() is interrupted, when
@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
-void report_usage_and_temp(unsigned char cpu_usage, unsigned char gpu_usage, int cpu_temp, int gpu_temp) {
+void report_usage_and_temp(HID& hid, unsigned char cpu_usage, unsigned char gpu_usage, int cpu_temp, int gpu_temp) {
     u_int8_t buf[64] = {0};
     buf[0] = MAGIC_HEADER;
     buf[1] = CELSIUS;
@@ -150,21 +150,21 @@ void report_usage_and_temp(unsigned char cpu_usage, unsigned char gpu_usage, int
     buf[7] = gpu_usage;
     temp_to_buf(buf + 8, gpu_temp);
 
-    int written = hid_write(appRuntime.hid_handle, buf, 64);
+    int written = hid_write(hid.handle, buf, 64);
     fprintf(appRuntime.log_stream, "written cpuU %d, gpuU: %d, cpuT:%d, gpuT:%d, written:%d\n", cpu_usage,
             gpu_usage, cpu_temp, gpu_temp, written);
     fflush(appRuntime.log_stream);
 }
 
 int parse_command_line(int argc, char *argv[], int *should_exit) {
-    static struct option long_options[] = {
+    option long_options[] = {
             {"conf_file", required_argument, 0, 'c'},
             {"test_conf", required_argument, 0, 't'},
             {"log_file",  required_argument, 0, 'l'},
             {"help",      no_argument,       0, 'h'},
             {"daemon",    no_argument,       0, 'd'},
             {"pid_file",  required_argument, 0, 'p'},
-            {NULL, 0,                        0, 0}
+            {nullptr, 0,                        0, 0}
     };
     int value, option_index = 0;
 
@@ -206,14 +206,10 @@ int parse_command_line(int argc, char *argv[], int *should_exit) {
 }
 
 void cleanup(void) {
-    if (appRuntime.hid_handle != NULL)
-        hid_close(appRuntime.hid_handle);
-    hid_exit();
-
     /* Close log file, when it is used. */
     if (appRuntime.log_stream != stdout) {
         fclose(appRuntime.log_stream);
-        appRuntime.log_stream = NULL;
+        appRuntime.log_stream = nullptr;
     }
 
     /* Write system log and close it. */

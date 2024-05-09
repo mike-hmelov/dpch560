@@ -1,22 +1,45 @@
-#include "hid.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <hidapi/hidapi.h>
 
-int init_hid_device(DaemonRuntime& params) {
+#include "runtime_params.hpp"
+#include "hid.hpp"
+
+HID::HID(FILE *log_stream) {
+    fLogStream = log_stream;
+    fValid = false;
     if (hid_init()) {
-        fprintf(params.log_stream, "FAILED: init hid api lib failed\n");
-        return EXIT_FAILURE;
+        fprintf(fLogStream, "FAILED: init hid api lib failed\n");
+        return;
     }
 
-    params.hid_handle = hid_open(CH560_VENDOR_ID, CH560_PRODUCT_ID, NULL);
+    handle = hid_open(CH560_VENDOR_ID, CH560_PRODUCT_ID, nullptr);
 
-    if (!params.hid_handle) {
-        fprintf(params.log_stream, "FAILED: open device failed\n");
-        return EXIT_FAILURE;
+    if (!handle) {
+        fprintf(fLogStream, "FAILED: open device failed\n");
+        return;
     }
 
-    hid_set_nonblocking(params.hid_handle, 1);
+    hid_set_nonblocking(handle, 1);
 
+    fValid = true;
+}
+
+HID::~HID()
+{
+    fLogStream = nullptr;
+
+    if (handle != nullptr)
+        hid_close(handle);
+    hid_exit();
+}
+
+bool HID::Valid() const
+{
+    return fValid;
+}
+
+void HID::Intro() const {
     u_int8_t buf[2] = {16, 170};
-    hid_write(params.hid_handle, buf, 64);
-
-    return 0;
+    hid_write(handle, buf, 64);
 }

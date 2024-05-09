@@ -5,7 +5,6 @@ DaemonRuntime::DaemonRuntime() {
     pid_fd = -1;
 }
 
-
 DaemonRuntime::~DaemonRuntime() {
     free(app_name);
     if (conf_file_name != nullptr)
