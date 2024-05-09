@@ -1,3 +1,9 @@
+#include <stdlib.h>
+#include <syslog.h>
+#include <errno.h>
+#include <string.h>
+
+#include "runtime_params.hpp"
 #include "util.hpp"
 
 void setup_log_file(DaemonRuntime& params) {

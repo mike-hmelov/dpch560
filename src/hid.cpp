@@ -5,6 +5,9 @@
 #include "runtime_params.hpp"
 #include "hid.hpp"
 
+#define CH560_VENDOR_ID 0x3633
+#define CH560_PRODUCT_ID 0x0005
+
 HID::HID(FILE *log_stream) {
     fLogStream = log_stream;
     fValid = false;
