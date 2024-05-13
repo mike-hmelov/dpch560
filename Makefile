@@ -15,16 +15,21 @@ endif
 LDFLAGS=`pkg-config hidapi-hidraw --libs`
 LIBS=-lsensors -lstdc++
 
-ch560-daemon: $(OBJS)
-	$(CXX) $^ $(LDFLAGS) $(LIBS) -o $(TARGET)
+ch560-daemon: pch $(OBJS)
+	$(CXX) $(OBJS) $(LDFLAGS) $(LIBS) -o $(TARGET)
 
 $(COBJS): %.o: %.c
 	$(CC) $(CFLAGS) $< -o $@
 
 $(CPPOBJS): %.o: %.cpp
-	$(CXX) $(CFLAGS) $< -o $@
+	$(CXX) -include-pch src/common.pch $(CFLAGS) $< -o $@
+
+pch:
+	$(CXX) -Xclang -emit-pch -o src/common.pch src/common.hpp
 
 clean:
 	rm -f $(OBJS) $(TARGET)
+	rm -f src/common.pch
+	rm -f ch560-daemon
 
 .PHONY: clean

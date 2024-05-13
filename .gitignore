@@ -1,3 +1,4 @@
 .idea
 ch560-daemon
 *.o
+*.pch

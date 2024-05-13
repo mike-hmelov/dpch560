@@ -15,8 +15,10 @@ public:
 
 private:
     int fDelay;
+    char fszCpuSensorName[100]{};
+    char fszGpuSensorName[100]{};
 public:
-    char fCpuSensorName[100]{};
-    char fGpuSensorName[100]{};
+    std::string_view fCpuSensorName;
+    std::string_view fGpuSensorName;
 };
 

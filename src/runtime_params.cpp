@@ -1,4 +1,4 @@
-#include <malloc.h>
+#include "common.hpp"
 #include "runtime_params.hpp"
 
 DaemonRuntime::DaemonRuntime() {

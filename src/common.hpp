@@ -1,0 +1,16 @@
+#include <cstring>
+#include <cerrno>
+#include <cstdlib>
+#include <syslog.h>
+#include <string_view>
+#include <cstdio>
+#include <unistd.h>
+#include <csignal>
+#include <getopt.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <hidapi/hidapi.h>
+#include <malloc.h>
+#include <sensors/sensors.h>
+#include <sensors/error.h>

@@ -1,12 +1,10 @@
-#include <sensors/sensors.h>
-#include <sensors/error.h>
-
+#include "common.hpp"
 #include "runtime_params.hpp"
 #include "config.hpp"
 #include "sensors.hpp"
 
 int init_sensors(Configuration& config, DaemonRuntime& params) {
-    fprintf(params.log_stream, "Using sensor %s to get CPU temp\n", config.fCpuSensorName);
+    fprintf(params.log_stream, "Using sensor %s to get CPU temp\n", config.fCpuSensorName.data());
 
     int result = sensors_init(nullptr);
     if (result) {
@@ -14,10 +12,10 @@ int init_sensors(Configuration& config, DaemonRuntime& params) {
         return result;
     }
 
-    result = sensors_parse_chip_name(config.fCpuSensorName, &params.cpu_root_chip);
+    result = sensors_parse_chip_name(config.fCpuSensorName.data(), &params.cpu_root_chip);
 
     if (result) {
-        fprintf(params.log_stream, "Failed to find sensor %s\n", config.fCpuSensorName);
+        fprintf(params.log_stream, "Failed to find sensor %s\n", config.fCpuSensorName.data());
         return result;
     }
 
@@ -25,14 +23,14 @@ int init_sensors(Configuration& config, DaemonRuntime& params) {
     params.cpu_chip = sensors_get_detected_chips(&params.cpu_root_chip, &chip_nr);
 
     if(!params.cpu_chip){
-        fprintf(params.log_stream, "Failed to detect sensor with name %s\n", config.fCpuSensorName);
+        fprintf(params.log_stream, "Failed to detect sensor with name %s\n", config.fCpuSensorName.data());
         return -1;
     }
 
-    result = sensors_parse_chip_name(config.fGpuSensorName, &params.gpu_root_chip);
+    result = sensors_parse_chip_name(config.fGpuSensorName.data(), &params.gpu_root_chip);
 
     if (result) {
-        fprintf(params.log_stream, "Failed to find sensor %s\n", config.fGpuSensorName);
+        fprintf(params.log_stream, "Failed to find sensor %s\n", config.fGpuSensorName.data());
         return result;
     }
 
@@ -40,7 +38,7 @@ int init_sensors(Configuration& config, DaemonRuntime& params) {
     params.gpu_chip = sensors_get_detected_chips(&params.gpu_root_chip, &chip_nr);
 
     if(!params.gpu_chip){
-        fprintf(params.log_stream, "Failed to detect sensor with name %s\n", config.fGpuSensorName);
+        fprintf(params.log_stream, "Failed to detect sensor with name %s\n", config.fGpuSensorName.data());
         return -1;
     }
 

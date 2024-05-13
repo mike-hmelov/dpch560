@@ -23,13 +23,7 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <syslog.h>
-#include <signal.h>
-#include <getopt.h>
-#include <string.h>
+#include "common.hpp"
 #include "runtime_params.hpp"
 #include "demonize.hpp"
 #include "config.hpp"

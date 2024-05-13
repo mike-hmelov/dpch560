@@ -1,8 +1,4 @@
-#include <stdlib.h>
-#include <syslog.h>
-#include <errno.h>
-#include <string.h>
-
+#include "common.hpp"
 #include "runtime_params.hpp"
 #include "util.hpp"
 

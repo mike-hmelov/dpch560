@@ -1,16 +1,12 @@
-#include <cstring>
-#include <cerrno>
-#include <cstdlib>
-
-#include <syslog.h>
+#include "common.hpp"
 
 #include "runtime_params.hpp"
 #include "config.hpp"
 
-Configuration::Configuration() {
+Configuration::Configuration(): fCpuSensorName(fszCpuSensorName), fGpuSensorName(fszGpuSensorName) {
     fDelay = 2;
-    strncpy(fCpuSensorName, "k10temp-pci-00c3", sizeof(fCpuSensorName));
-    strncpy(fGpuSensorName, "amdgpu-pci-0300", sizeof(fGpuSensorName));
+    fCpuSensorName = "k10temp-pci-00c3";
+    fGpuSensorName = "amdgpu-pci-0300";
 }
 
 Configuration::~Configuration() = default;

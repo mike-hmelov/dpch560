@@ -1,9 +1,5 @@
 #pragma once
 
-#include <cstdio>
-#include <hidapi/hidapi.h>
-#include <sensors/sensors.h>
-
 class DaemonRuntime {
 public:
     DaemonRuntime();

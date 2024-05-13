@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <hidapi/hidapi.h>
-
+#include "common.hpp"
 #include "runtime_params.hpp"
 #include "hid.hpp"
 

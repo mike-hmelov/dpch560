@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include "common.hpp"
 
 /**
  * \brief Print help for this application
