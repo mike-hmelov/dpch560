@@ -14,3 +14,5 @@
 #include <malloc.h>
 #include <sensors/sensors.h>
 #include <sensors/error.h>
+#include <memory>
+#include <cstdarg>

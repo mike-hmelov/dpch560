@@ -4,7 +4,7 @@ TARGET=ch560-daemon
 CC=clang
 CXX=clang
 COBJS=
-CPPOBJS=src/config.o src/daemon.o src/usage.o src/demonize.o src/hid.o src/util.o src/sensors.o src/runtime_params.o
+CPPOBJS=src/syslog.o src/config.o src/daemon.o src/usage.o src/demonize.o src/hid.o src/util.o src/sensors.o src/runtime_params.o
 OBJS=$(COBJS) $(CPPOBJS)
 
 ifeq ($(RELEASE), 1)

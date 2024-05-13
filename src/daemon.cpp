@@ -23,6 +23,8 @@
  *
  */
 
+#include <memory>
+
 #include "common.hpp"
 #include "runtime_params.hpp"
 #include "demonize.hpp"
@@ -30,11 +32,12 @@
 #include "util.hpp"
 #include "hid.hpp"
 #include "sensors.hpp"
+#include "syslog.hpp"
 
 static volatile int running = 0;
 Configuration appConfig;
 DaemonRuntime appRuntime;
-
+[[maybe_unused]] std::unique_ptr<SysLog> sysLog;
 
 /**
  * \brief Callback function for handling signals.
@@ -65,7 +68,7 @@ void handle_signal(int sig) {
 
 int parse_command_line(int argc, char *argv[], int *should_exit);
 
-void cleanup(void);
+void cleanup();
 
 void report_usage_and_temp(HID& hid, unsigned char cpu_usage, unsigned char gpu_usage, int cpu_temp, int gpu_temp);
 
@@ -85,9 +88,7 @@ int main(int argc, char *argv[]) {
         daemonize(appRuntime);
     }
 
-    /* Open system log and write message to it */
-    openlog(appRuntime.app_name, LOG_PID | LOG_CONS, LOG_DAEMON);
-    syslog(LOG_INFO, "Started %s", appRuntime.app_name);
+    sysLog = std::make_unique<SysLog>(appRuntime);
 
     /* Daemon will handle two signals */
     signal(SIGINT, handle_signal);
@@ -152,13 +153,13 @@ void report_usage_and_temp(HID& hid, unsigned char cpu_usage, unsigned char gpu_
 
 int parse_command_line(int argc, char *argv[], int *should_exit) {
     option long_options[] = {
-            {"conf_file", required_argument, 0, 'c'},
-            {"test_conf", required_argument, 0, 't'},
-            {"log_file",  required_argument, 0, 'l'},
-            {"help",      no_argument,       0, 'h'},
-            {"daemon",    no_argument,       0, 'd'},
-            {"pid_file",  required_argument, 0, 'p'},
-            {nullptr, 0,                        0, 0}
+            {"conf_file", required_argument, nullptr, 'c'},
+            {"test_conf", required_argument, nullptr, 't'},
+            {"log_file",  required_argument, nullptr, 'l'},
+            {"help",      no_argument,       nullptr, 'h'},
+            {"daemon",    no_argument,       nullptr, 'd'},
+            {"pid_file",  required_argument, nullptr, 'p'},
+            {nullptr, 0,                        nullptr, 0}
     };
     int value, option_index = 0;
 
@@ -199,16 +200,7 @@ int parse_command_line(int argc, char *argv[], int *should_exit) {
     return EXIT_SUCCESS;
 }
 
-void cleanup(void) {
-    /* Close log file, when it is used. */
-    if (appRuntime.log_stream != stdout) {
-        fclose(appRuntime.log_stream);
-        appRuntime.log_stream = nullptr;
-    }
-
-    /* Write system log and close it. */
-    syslog(LOG_INFO, "Stopped %s", appRuntime.app_name);
-    closelog();
+void cleanup() {
     cleanup_sensors(appRuntime);
 }
 

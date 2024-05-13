@@ -13,4 +13,7 @@ DaemonRuntime::~DaemonRuntime() {
         free(log_file_name);
     if (pid_file_name != nullptr)
         free(pid_file_name);
+    if (log_stream != stdout) {
+        fclose(log_stream);
+    }
 }
