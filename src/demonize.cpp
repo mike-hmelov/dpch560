@@ -7,7 +7,7 @@
  */
 void daemonize(DaemonRuntime& params) {
     pid_t pid;
-    int fd;
+    long fd;
 
     /* Fork off the parent process */
     pid = fork();
@@ -61,7 +61,7 @@ void daemonize(DaemonRuntime& params) {
     stderr = fopen("/dev/null", "w+");
 
     /* Try to write PID of daemon to lockfile */
-    if (params.pid_file_name != NULL) {
+    if (params.pid_file_name != nullptr) {
         char str[20];
         params.pid_fd = open(params.pid_file_name, O_RDWR | O_CREAT, 0640);
         if (params.pid_fd < 0) {
