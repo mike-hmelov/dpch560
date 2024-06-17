@@ -1,9 +1,9 @@
 #pragma once
 
-class HID {
+class Display {
 public:
-    HID(FILE *log_stream);
-    ~HID();
+    Display(FILE *log_stream);
+    ~Display();
 
     bool Valid() const;
     void Intro() const;

@@ -68,9 +68,7 @@ void handle_signal(int sig) {
 
 int parse_command_line(int argc, char *argv[], int *should_exit);
 
-void cleanup();
-
-void report_usage_and_temp(HID& hid, unsigned char cpu_usage, unsigned char gpu_usage, int cpu_temp, int gpu_temp);
+void report_usage_and_temp(Display& display, unsigned char cpu_usage, unsigned char gpu_usage, int cpu_temp, int gpu_temp);
 
 /* Main function */
 int main(int argc, char *argv[]) {
@@ -104,16 +102,18 @@ int main(int argc, char *argv[]) {
         fprintf(appRuntime.log_stream, "No config file given, using defaults\n");
     }
 
-    HID hid(appRuntime.log_stream);
-    if(!hid.Valid()){
-        cleanup();
-        return result;
+    Display display(appRuntime.log_stream);
+    if(!display.Valid()){
+        return -4;
     }
 
-    result = init_sensors(appConfig, appRuntime);
-    if (result) {
-        cleanup();
-        return result;
+    auto cpuFunction = std::string_view("CPU");
+    auto gpuFunction = std::string_view("GPU");
+    Sensor cpuSensor(appRuntime.log_stream, cpuFunction, appConfig.fCpuSensorName);
+    Sensor gpuSensor(appRuntime.log_stream, gpuFunction, appConfig.fGpuSensorName, SENSORS_FEATURE_TEMP);
+    if(!cpuSensor.Init() || !gpuSensor.Init())
+    {
+        return -5;
     }
     /* This global variable can be changed in function handling signal */
     running = 1;
@@ -123,19 +123,18 @@ int main(int argc, char *argv[]) {
 
     /* Never ending loop of server */
     while (running == 1) {
-        report_usage_and_temp(hid, cpu_usage, gpu_usage, cpu_temp(appRuntime), gpu_temp(appRuntime));
+        report_usage_and_temp(display, cpu_usage, gpu_usage, cpuSensor.Read(), gpuSensor.Read());
 
         /* Real server should use select() or poll() for waiting at
          * asynchronous event. Note: sleep() is interrupted, when
          * signal is received. */
         sleep(appConfig.Delay());
     }
-    cleanup();
 
     return EXIT_SUCCESS;
 }
 
-void report_usage_and_temp(HID& hid, unsigned char cpu_usage, unsigned char gpu_usage, int cpu_temp, int gpu_temp) {
+void report_usage_and_temp(Display& display, unsigned char cpu_usage, unsigned char gpu_usage, int cpu_temp, int gpu_temp) {
     u_int8_t buf[64] = {0};
     buf[0] = MAGIC_HEADER;
     buf[1] = CELSIUS;
@@ -145,7 +144,7 @@ void report_usage_and_temp(HID& hid, unsigned char cpu_usage, unsigned char gpu_
     buf[7] = gpu_usage;
     temp_to_buf(buf + 8, gpu_temp);
 
-    int written = hid_write(hid.handle, buf, 64);
+    int written = hid_write(display.handle, buf, 64);
     fprintf(appRuntime.log_stream, "written cpuU %d, gpuU: %d, cpuT:%d, gpuT:%d, written:%d\n", cpu_usage,
             gpu_usage, cpu_temp, gpu_temp, written);
     fflush(appRuntime.log_stream);
@@ -198,10 +197,6 @@ int parse_command_line(int argc, char *argv[], int *should_exit) {
     appRuntime.app_name = strdup(argv[0]);
     *should_exit = 0;
     return EXIT_SUCCESS;
-}
-
-void cleanup() {
-    cleanup_sensors(appRuntime);
 }
 
 

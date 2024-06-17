@@ -1,9 +1,26 @@
 #pragma once
 
-int init_sensors(Configuration& config, DaemonRuntime& params);
+class Sensor
+{
+public:
+    Sensor(FILE *logStream, std::string_view &function, std::string_view &name, int specific = 0);
+    ~Sensor();
 
-void cleanup_sensors(DaemonRuntime& params);
+protected:
+    static void GlobalDestroy();
+    static int sSensorCounter;
 
-int cpu_temp(DaemonRuntime& params);
+public:
+    bool Init();
+    int Read();
 
-int gpu_temp(DaemonRuntime& params);
+private:
+    FILE *fLogStream;
+    std::string_view &fFunction;
+    std::string_view &fName;
+    sensors_chip_name fRootChip;
+    sensors_chip_name *fChip;
+    sensors_feature *fFeature;
+    sensors_subfeature *fSubFeature;
+    int fSpecific;
+};

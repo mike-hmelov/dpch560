@@ -5,7 +5,7 @@
 #define CH560_VENDOR_ID 0x3633
 #define CH560_PRODUCT_ID 0x0005
 
-HID::HID(FILE *log_stream) {
+Display::Display(FILE *log_stream) {
     fLogStream = log_stream;
     fValid = false;
     if (hid_init()) {
@@ -25,7 +25,7 @@ HID::HID(FILE *log_stream) {
     fValid = true;
 }
 
-HID::~HID()
+Display::~Display()
 {
     fLogStream = nullptr;
 
@@ -34,12 +34,12 @@ HID::~HID()
     hid_exit();
 }
 
-bool HID::Valid() const
+bool Display::Valid() const
 {
     return fValid;
 }
 
-void HID::Intro() const {
+void Display::Intro() const {
     u_int8_t buf[2] = {16, 170};
     hid_write(handle, buf, 64);
 }
