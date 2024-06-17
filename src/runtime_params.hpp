@@ -13,10 +13,5 @@ public:
     char *app_name{};
     FILE *log_stream{};
     int start_daemonized{};
-
-    sensors_chip_name gpu_root_chip{};
-    const sensors_chip_name* gpu_chip{};
-    const sensors_feature *gpu_feature{};
-    const sensors_subfeature *gpu_sub{};
 };
 

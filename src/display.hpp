@@ -7,10 +7,10 @@ public:
 
     bool Valid() const;
     void Intro() const;
+    void Write(int cpu_usage, int cpu_temp, int gpu_usage, int gpu_temp);
 
 private:
     bool fValid;
     FILE *fLogStream;
-public:
-    hid_device* handle;
+    hid_device* fHandle;
 };

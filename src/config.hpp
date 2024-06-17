@@ -1,6 +1,7 @@
 #pragma once
 
-class Configuration {
+class Configuration
+{
 public:
     Configuration();
 
@@ -17,8 +18,12 @@ private:
     int fDelay;
     char fszCpuSensorName[100]{};
     char fszGpuSensorName[100]{};
+
 public:
     std::string_view fCpuSensorName;
     std::string_view fGpuSensorName;
+    std::string_view fCpuFunction;
+    std::string_view fGpuFunction;
+    int fCpuSensorFunction;
+    int fGpuSensorFunction;
 };
-

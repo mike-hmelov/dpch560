@@ -16,12 +16,3 @@ void setup_log_file(DaemonRuntime& params) {
     }
 }
 
-void temp_to_buf(u_int8_t *buf, int temp) {
-    int current = temp;
-    *(buf + 2) = current % 10;
-    current /= 10;
-    *(buf + 1) = current % 10;
-    current /= 10;
-    *(buf) = current % 10;
-}
-

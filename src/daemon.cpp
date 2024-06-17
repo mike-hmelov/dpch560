@@ -30,7 +30,7 @@
 #include "demonize.hpp"
 #include "config.hpp"
 #include "util.hpp"
-#include "hid.hpp"
+#include "display.hpp"
 #include "sensors.hpp"
 #include "syslog.hpp"
 
@@ -68,8 +68,6 @@ void handle_signal(int sig) {
 
 int parse_command_line(int argc, char *argv[], int *should_exit);
 
-void report_usage_and_temp(Display& display, unsigned char cpu_usage, unsigned char gpu_usage, int cpu_temp, int gpu_temp);
-
 /* Main function */
 int main(int argc, char *argv[]) {
     int should_exit = 0;
@@ -103,14 +101,12 @@ int main(int argc, char *argv[]) {
     }
 
     Display display(appRuntime.log_stream);
+    Sensor cpuSensor(appRuntime.log_stream, appConfig.fCpuFunction, appConfig.fCpuSensorName, appConfig.fCpuSensorFunction);
+    Sensor gpuSensor(appRuntime.log_stream, appConfig.fGpuFunction, appConfig.fGpuSensorName, appConfig.fGpuSensorFunction);
+
     if(!display.Valid()){
         return -4;
     }
-
-    auto cpuFunction = std::string_view("CPU");
-    auto gpuFunction = std::string_view("GPU");
-    Sensor cpuSensor(appRuntime.log_stream, cpuFunction, appConfig.fCpuSensorName);
-    Sensor gpuSensor(appRuntime.log_stream, gpuFunction, appConfig.fGpuSensorName, SENSORS_FEATURE_TEMP);
     if(!cpuSensor.Init() || !gpuSensor.Init())
     {
         return -5;
@@ -123,7 +119,7 @@ int main(int argc, char *argv[]) {
 
     /* Never ending loop of server */
     while (running == 1) {
-        report_usage_and_temp(display, cpu_usage, gpu_usage, cpuSensor.Read(), gpuSensor.Read());
+        display.Write(cpu_usage, cpuSensor.Read(), gpu_usage, gpuSensor.Read());
 
         /* Real server should use select() or poll() for waiting at
          * asynchronous event. Note: sleep() is interrupted, when
@@ -132,22 +128,6 @@ int main(int argc, char *argv[]) {
     }
 
     return EXIT_SUCCESS;
-}
-
-void report_usage_and_temp(Display& display, unsigned char cpu_usage, unsigned char gpu_usage, int cpu_temp, int gpu_temp) {
-    u_int8_t buf[64] = {0};
-    buf[0] = MAGIC_HEADER;
-    buf[1] = CELSIUS;
-    buf[2] = cpu_usage;
-    temp_to_buf(buf + 3, cpu_temp);
-    buf[6] = CELSIUS;
-    buf[7] = gpu_usage;
-    temp_to_buf(buf + 8, gpu_temp);
-
-    int written = hid_write(display.handle, buf, 64);
-    fprintf(appRuntime.log_stream, "written cpuU %d, gpuU: %d, cpuT:%d, gpuT:%d, written:%d\n", cpu_usage,
-            gpu_usage, cpu_temp, gpu_temp, written);
-    fflush(appRuntime.log_stream);
 }
 
 int parse_command_line(int argc, char *argv[], int *should_exit) {
@@ -209,8 +189,6 @@ int parse_command_line(int argc, char *argv[], int *should_exit) {
 // TODO send real cpu usage to display
 // TODO learn gpu usage
 // TODO send readl gpu usage to display
-// TODO lean gpu temp
-// TODO send real gpu temp to display
 // TODO make gpu configurable
 // TODO make grade configurable
 // TODO rotate logs
