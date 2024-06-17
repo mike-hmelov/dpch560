@@ -23,8 +23,6 @@
  *
  */
 
-#include <memory>
-
 #include "common.hpp"
 #include "runtime_params.hpp"
 #include "demonize.hpp"

@@ -3,13 +3,11 @@
 #include "runtime_params.hpp"
 #include "config.hpp"
 
-Configuration::Configuration() : fCpuSensorName(fszCpuSensorName), fGpuSensorName(fszGpuSensorName),
+Configuration::Configuration() : fCpuSensorName("k10temp-pci-00c3"), fGpuSensorName("amdgpu-pci-0300"),
                                  fCpuFunction("CPU"), fGpuFunction("GPU"),
-                                 fCpuSensorFunction(0), fGpuSensorFunction(SENSORS_FEATURE_TEMP)
+                                 fCpuSensorFunction(0), fGpuSensorFunction(SENSORS_FEATURE_TEMP),
+                                 fDelay(2)
 {
-    fDelay = 2;
-    fCpuSensorName = "k10temp-pci-00c3";
-    fGpuSensorName = "amdgpu-pci-0300";
 }
 
 Configuration::~Configuration() = default;

@@ -14,11 +14,6 @@ public:
 
     [[nodiscard]] int Delay() const { return fDelay; }
 
-private:
-    int fDelay;
-    char fszCpuSensorName[100]{};
-    char fszGpuSensorName[100]{};
-
 public:
     std::string_view fCpuSensorName;
     std::string_view fGpuSensorName;
@@ -26,4 +21,7 @@ public:
     std::string_view fGpuFunction;
     int fCpuSensorFunction;
     int fGpuSensorFunction;
+
+private:
+    int fDelay;
 };
