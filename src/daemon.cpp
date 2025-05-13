@@ -37,10 +37,6 @@ Configuration appConfig;
 DaemonRuntime appRuntime;
 [[maybe_unused]] std::unique_ptr<SysLog> sysLog;
 
-/**
- * \brief Callback function for handling signals.
- * \param	sig	identifier of signal
- */
 void handle_signal(int sig) {
     if (sig == SIGINT) {
         fprintf(appRuntime.log_stream, "Debug: stopping daemon ...\n");
@@ -64,25 +60,20 @@ void handle_signal(int sig) {
     }
 }
 
-int parse_command_line(int argc, char *argv[], int *should_exit);
-
 /* Main function */
-int main(int argc, char *argv[]) {
-    int should_exit = 0;
-    int result = parse_command_line(argc, argv, &should_exit);
-
-    if (should_exit) {
-        return result;
+int main(int argc, char *argv[])
+{
+    appRuntime.ParseCommandLine(argc, argv);
+    if (appRuntime.ExitAtOnce()) {
+        return appRuntime.ExitCode();
     }
 
     /* When daemonizing is requested at command line. */
-    if (appRuntime.start_daemonized) {
-        /* It is also possible to use glibc function deamon()
-         * at this point, but it is useful to customize your daemon. */
+    if (appRuntime.StartAsDaemon()) {
         daemonize(appRuntime);
     }
 
-    sysLog = std::make_unique<SysLog>(appRuntime);
+    sysLog = std::make_unique<SysLog>(appRuntime.GetName());
 
     /* Daemon will handle two signals */
     signal(SIGINT, handle_signal);
@@ -125,55 +116,6 @@ int main(int argc, char *argv[]) {
         sleep(appConfig.Delay());
     }
 
-    return EXIT_SUCCESS;
-}
-
-int parse_command_line(int argc, char *argv[], int *should_exit) {
-    option long_options[] = {
-            {"conf_file", required_argument, nullptr, 'c'},
-            {"test_conf", required_argument, nullptr, 't'},
-            {"log_file",  required_argument, nullptr, 'l'},
-            {"help",      no_argument,       nullptr, 'h'},
-            {"daemon",    no_argument,       nullptr, 'd'},
-            {"pid_file",  required_argument, nullptr, 'p'},
-            {nullptr, 0,                        nullptr, 0}
-    };
-    int value, option_index = 0;
-
-    /* Try to process all command line arguments */
-    while ((value = getopt_long(argc, argv, "c:l:t:p:dh", long_options, &option_index)) != -1) {
-        switch (value) {
-            case 'h':
-                print_help(argv[0]);
-                *should_exit = 1;
-                return EXIT_SUCCESS;
-            case '?':
-                print_help(argv[0]);
-                *should_exit = 1;
-                return EXIT_FAILURE;
-            case 't': {
-                *should_exit = 1;
-                Configuration testConfig;
-                return testConfig.Test(optarg);
-            }
-            case 'c':
-                appRuntime.conf_file_name = strdup(optarg);
-                break;
-            case 'l':
-                appRuntime.log_file_name = strdup(optarg);
-                break;
-            case 'p':
-                appRuntime.pid_file_name = strdup(optarg);
-                break;
-            case 'd':
-                appRuntime.start_daemonized = 1;
-                break;
-            default:
-                break;
-        }
-    }
-    appRuntime.app_name = strdup(argv[0]);
-    *should_exit = 0;
     return EXIT_SUCCESS;
 }
 

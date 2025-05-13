@@ -2,12 +2,12 @@
 
 class SysLog {
 public:
-    explicit SysLog(DaemonRuntime& params);
+    explicit SysLog(const char* appName);
     ~SysLog();
 
 public:
     void write(int _pri, const char *_fmt, ...);
 
 private:
-    std::string_view app_name;
+    std::string_view _appName;
 };

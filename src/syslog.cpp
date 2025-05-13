@@ -1,10 +1,11 @@
+#include "common.hpp"
 #include "runtime_params.hpp"
 #include "syslog.hpp"
 
-SysLog::SysLog(DaemonRuntime& params): app_name(params.app_name)
+SysLog::SysLog(const char* appName): _appName(appName)
 {
-    openlog(app_name.data(), LOG_PID | LOG_CONS, LOG_DAEMON);
-    write(LOG_INFO, "Started %s", app_name.data());
+    openlog(_appName.data(), LOG_PID | LOG_CONS, LOG_DAEMON);
+    write(LOG_INFO, "Started %s", _appName.data());
 }
 
 void SysLog::write(int __pri, const char *__fmt, ...)
@@ -17,6 +18,6 @@ void SysLog::write(int __pri, const char *__fmt, ...)
 
 SysLog::~SysLog() {
     /* Write system log and close it. */
-    write(LOG_INFO, "Stopped %s", app_name.data());
+    write(LOG_INFO, "Stopped %s", _appName.data());
     closelog();
 }
