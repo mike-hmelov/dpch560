@@ -5,6 +5,7 @@ mod demonize;
 mod display;
 mod logging;
 mod sensor;
+mod hid;
 
 use std::process::ExitCode;
 use std::thread::sleep;
