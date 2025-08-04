@@ -26,7 +26,7 @@ fn do_logic() {
     let gpu_sensor = sensor::sensor();
 
     loop {
-        display.write(cpu_sensor.read(), gpu_sensor.read());
+        display.write(cpu_sensor.read(), 10, gpu_sensor.read(), 50);
         thread::sleep(Duration::from_secs(1));
     }
 }

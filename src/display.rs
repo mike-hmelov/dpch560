@@ -45,11 +45,9 @@ pub fn display() -> Display {
 }
 
 impl Display {
-    pub(crate) fn write(&self, cpu_temp: i32, gpu_temp: i32) {
+    pub(crate) fn write(&self, cpu_temp: i32, cpu_usage: u8, gpu_temp: i32, gpu_usage: u8) {
         info!("write to display cpu: {cpu_temp} gpu: {gpu_temp}");
 
-        let cpu_usage = 31;
-        let gpu_usage = 42;
         let temp_placeholder = 0;
         #[rustfmt::skip]
         let mut buf :[u8; 11] = [
