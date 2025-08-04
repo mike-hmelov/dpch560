@@ -22,8 +22,8 @@ fn main() -> ExitCode {
 
 fn do_logic() {
     let display = display::display();
-    let cpu_sensor = sensor::sensor();
-    let gpu_sensor = sensor::sensor();
+    let cpu_sensor = sensor::sensor("k10temp-pci-00c3");
+    let gpu_sensor = sensor::sensor("amdgpu-pci-0300");
 
     loop {
         display.write(cpu_sensor.read(), 10, gpu_sensor.read(), 50);
