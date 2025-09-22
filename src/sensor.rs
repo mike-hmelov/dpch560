@@ -1,11 +1,12 @@
 use sensors::{FeatureType, Sensors, SubfeatureType};
+use crate::metrics::MetricProvider;
 
 pub struct Sensor {
     sub_feature: sensors::Subfeature,
 }
 
-impl Sensor {
-    pub(crate) fn read(&self) -> i32 {
+impl MetricProvider for Sensor {
+    fn read(&self) -> i32 {
         self.sub_feature.get_value().expect("Failed to read sensor") as i32
     }
 }
@@ -20,10 +21,10 @@ pub fn sensor(name: &str) -> Sensor {
 
     let sub_feature = chip
         .into_iter()
-        .filter(|f| (f.feature_type().eq(&FeatureType::SENSORS_FEATURE_TEMP)))
-        .flatten()
-        .filter(|sub| (sub.subfeature_type() == &SubfeatureType::SENSORS_SUBFEATURE_TEMP_INPUT))
-        .next()
+        .find(|f| f.feature_type() == &FeatureType::SENSORS_FEATURE_TEMP)
+        .into_iter()
+        .flat_map(|f| f) // iterate subfeatures of the found temp feature
+        .find(|sub| sub.subfeature_type() == &SubfeatureType::SENSORS_SUBFEATURE_TEMP_INPUT)
         .expect("No default subfeature found");
 
     Sensor { sub_feature }

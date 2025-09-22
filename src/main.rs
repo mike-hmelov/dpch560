@@ -5,29 +5,59 @@ mod demonize;
 mod display;
 mod logging;
 mod sensor;
+mod metrics;
 
 use std::process::ExitCode;
 use std::thread;
 use std::time::Duration;
+use metrics::MetricProvider;
+
+struct Config {
+    run_as_daemon: bool,
+    cpu_sensor: String,
+    gpu_sensor: String,
+    update_interval: u64,
+}
 
 fn main() -> ExitCode {
-    demonize::demonize();
+    let config = Config {
+        run_as_daemon: true,
+        cpu_sensor: "k10temp-pci-00c3".to_string(),
+        gpu_sensor: "amdgpu-pci-0300".to_string(),
+        update_interval: 1,
+    };
+
+    if config.run_as_daemon {
+        demonize::demonize();
+    }
 
     logging::setup_syslog();
 
-    do_logic();
+    do_logic(config);
 
     ExitCode::SUCCESS
 }
 
-fn do_logic() {
-    let display = display::display();
-    let cpu_sensor = sensor::sensor("k10temp-pci-00c3");
-    let gpu_sensor = sensor::sensor("amdgpu-pci-0300");
+fn do_logic(config: Config) {
+    let display = display::Display::new();
+    let cpu_sensor = sensor::sensor(config.cpu_sensor.as_str());
+    let gpu_sensor = sensor::sensor(config.gpu_sensor.as_str());
 
+    // 1 == 1
+    // 10 == 2
+    // 11 == 3
+    // 100 == 4
+    // 101 == 5
+    // 110 == 6
+    // 111 == 7
+    // 1000 == 8
+    // 1001 == 9
+    // 1010 == 10
+    let usage = 70;
     loop {
-        display.write(cpu_sensor.read(), 10, gpu_sensor.read(), 50);
-        thread::sleep(Duration::from_secs(1));
+        display.write(cpu_sensor.read(), usage, gpu_sensor.read(), usage);
+        thread::sleep(Duration::from_secs(config.update_interval));
+        // usage += 1;
     }
 }
 
