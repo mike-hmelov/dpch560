@@ -1,7 +1,18 @@
-FROM rust:slim-bullseye
+FROM rust:slim-bullseye AS builder
 
-# TODO install deps
-# TODO copy rust files
-# TODO compile static
+COPY src/ /app/src/
+COPY Cargo.* /app/
 
-# TODO deploy
+WORKDIR /app
+
+RUN apt update && apt install libsensors-dev -y
+
+RUN cargo build --release
+
+FROM scratch AS runtime
+
+USER 1000
+
+COPY --from=builder /app/target/release/ch560monitor /ch560monitor
+
+ENTRYPOINT ["/ch560monitor"]

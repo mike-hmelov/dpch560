@@ -1,5 +1,5 @@
 [package]
-name = "ch560monitor-rust"
+name = "ch560monitor"
 version = "0.1.0"
 edition = "2024"
 
