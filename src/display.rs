@@ -57,6 +57,8 @@ impl Display {
         buf[2] = if cpu_usage < 15 { 1 } else { (cpu_usage as f32 / 10.0).round() as u8 };
         buf[7] = if gpu_usage < 15 { 1 } else { (gpu_usage as f32 / 10.0).round() as u8 };
 
+        println!("cpu: {cpu_usage} gpu: {gpu_usage}");
+
         self.device
             .write_interrupt(ENDPOINT_OUT, &buf, TIMEOUT)
             .expect("unable to write to device");

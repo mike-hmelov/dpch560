@@ -1,12 +1,12 @@
 extern crate daemonize;
 extern crate log;
 
+mod cpu;
 mod demonize;
 mod display;
+mod gpu;
 mod logging;
 mod sensor;
-mod cpu;
-mod gpu;
 
 use std::process::ExitCode;
 use std::thread;
@@ -43,10 +43,16 @@ fn do_logic(config: Config) {
     let cpu = cpu::CPU::new(config.cpu_sensor.as_str());
     let gpu = gpu::GPU::new(config.gpu_sensor.as_str());
 
+    let mut cpu_instant = cpu.read_instant();
     loop {
-        display.write(cpu.temperature(), cpu.usage(), gpu.temperature(), gpu.usage());
+        display.write(
+            cpu.temperature(),
+            cpu.usage(cpu_instant),
+            gpu.temperature(),
+            gpu.usage(),
+        );
+        cpu_instant = cpu.read_instant();
         thread::sleep(Duration::from_secs(config.update_interval));
-        // usage += 1;
     }
 }
 
