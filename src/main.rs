@@ -63,10 +63,6 @@ fn do_logic(config: Config) {
 // TODO make rpm
 // TODO make deb
 // TODO make static or lib dependent
-// TODO learn cpu usage
-// TODO send real cpu usage to display
-// TODO learn gpu usage
-// TODO send readl gpu usage to display
 // TODO make gpu configurable
 // TODO make gpu sensor configurable and resolvable
 // TODO resolve cpu
@@ -75,3 +71,4 @@ fn do_logic(config: Config) {
 // TODO rotate logs
 // TODO make ids parametrized (support other devices??)
 // TODO find feature by name - rather then just [0]
+// TODO resolve real pci device for gpu usage metric
