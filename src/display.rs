@@ -50,11 +50,12 @@ impl Display {
         let mut buf: [u8; 64] = [0; 64];
         buf[0] = MAGIC_HEADER;
         buf[1] = CELSIUS;
-        buf[2] = cpu_usage / 10;
         write_bcd_3(cpu_temp, 3, &mut buf);
         buf[6] = CELSIUS;
-        buf[7] = gpu_usage / 10;
         write_bcd_3(gpu_temp, 8, &mut buf);
+
+        buf[2] = if cpu_usage < 15 { 1 } else { (cpu_usage as f32 / 10.0).round() as u8 };
+        buf[7] = if gpu_usage < 15 { 1 } else { (gpu_usage as f32 / 10.0).round() as u8 };
 
         self.device
             .write_interrupt(ENDPOINT_OUT, &buf, TIMEOUT)

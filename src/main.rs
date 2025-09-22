@@ -5,12 +5,12 @@ mod demonize;
 mod display;
 mod logging;
 mod sensor;
-mod metrics;
+mod cpu;
+mod gpu;
 
 use std::process::ExitCode;
 use std::thread;
 use std::time::Duration;
-use metrics::MetricProvider;
 
 struct Config {
     run_as_daemon: bool,
@@ -40,22 +40,11 @@ fn main() -> ExitCode {
 
 fn do_logic(config: Config) {
     let display = display::Display::new();
-    let cpu_sensor = sensor::sensor(config.cpu_sensor.as_str());
-    let gpu_sensor = sensor::sensor(config.gpu_sensor.as_str());
+    let cpu = cpu::CPU::new(config.cpu_sensor.as_str());
+    let gpu = gpu::GPU::new(config.gpu_sensor.as_str());
 
-    // 1 == 1
-    // 10 == 2
-    // 11 == 3
-    // 100 == 4
-    // 101 == 5
-    // 110 == 6
-    // 111 == 7
-    // 1000 == 8
-    // 1001 == 9
-    // 1010 == 10
-    let usage = 70;
     loop {
-        display.write(cpu_sensor.read(), usage, gpu_sensor.read(), usage);
+        display.write(cpu.temperature(), cpu.usage(), gpu.temperature(), gpu.usage());
         thread::sleep(Duration::from_secs(config.update_interval));
         // usage += 1;
     }
@@ -73,6 +62,9 @@ fn do_logic(config: Config) {
 // TODO learn gpu usage
 // TODO send readl gpu usage to display
 // TODO make gpu configurable
+// TODO make gpu sensor configurable and resolvable
+// TODO resolve cpu
+// TODO make cpu sensor configurable and resolvable
 // TODO make grade configurable
 // TODO rotate logs
 // TODO make ids parametrized (support other devices??)
